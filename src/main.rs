@@ -1,27 +1,40 @@
 use rand::Rng;
 
 // Alice génère x, calcule h_A = 3^x mod 2^63 et envoie h_A
-fn generate_public_key() -> (usize, usize) {
-    let x: usize = rand::thread_rng().gen_range(1..=u32::MAX as usize); // x ∈ [1, 2^32]
+fn generate_public_key() -> (u64, u64) {
+    let mut h = 1;
+    let mut x;
+    while h == 1 {
+        // Génère un nombre aléatoire x
+        x = rand::thread_rng().gen_range(2..=u32::MAX as u64); // x ∈ [1, 2^32]
+        h = mod_exp(3, x, 2 ^ 63);
+    }
+    let x: u64 = rand::thread_rng().gen_range(2..=u32::MAX as u64); // x ∈ [1, 2^32]
     let h = mod_exp(3, x, 2 ^ 63);
     (x, h) // Retourne x et h_A pour l'étape suivante
 }
 
-fn calculate_secret(h: usize, x: usize) -> usize {
+fn calculate_secret(h: u64, x: u64) -> u64 {
     mod_exp(h, x, 2 ^ 63)
 }
 
 // Eve intercepte les messages et remplace h_A et h_B
-fn eve_intercept() -> (usize, usize, usize, usize) {
+fn eve_intercept() -> (u64, u64, u64, u64) {
+    let mut h_ea = 1;
+    let mut h_eb = 1;
+    let mut e_x=0 ;
+    let mut e_y=0;
     // Eve génère son propres secrets e_x
-    let e_x: usize = rand::thread_rng().gen_range(1..=u32::MAX as usize);
-    let e_y: usize = rand::thread_rng().gen_range(1..=u32::MAX as usize);
+    while h_ea == 1 || h_eb == 1 {
+        // Eve génère son propres secrets e_x et e_y
+        e_x = rand::thread_rng().gen_range(2..=u32::MAX as u64);
+        e_y = rand::thread_rng().gen_range(2..=u32::MAX as u64);
 
-    let h_ea = mod_exp(3, e_x, 2 ^ 63);
-    let h_eb = mod_exp(3, e_y, 2 ^ 63);
+        h_ea = mod_exp(3, e_x, 2 ^ 63);
+        h_eb = mod_exp(3, e_y, 2 ^ 63);
+    }
 
     println!("Eve envoie h_EA = {}, h_EB = {}", h_ea, h_eb);
-
     (h_ea, h_eb, e_x, e_y)
 }
 
@@ -73,15 +86,15 @@ fn exercice1() {
     let (h_ea, h_eb, e_x, e_y) = eve_intercept();
 
     // Alice reçoit h_EB, Bob reçoit h_EA
-    let k_a2 = calculate_secret(h_eb, x2);
+    let k_a2 = calculate_secret(h_ea, x2);
     println!(
-        "Alice recoit h_eb = {} calcule sa clé k_A avec h_EB = {}",
+        "Alice recoit h_eb = {} calcule sa clé k_A = {}",
         h_eb, k_a2
     );
 
-    let k_b2 = calculate_secret(h_ea, y2);
+    let k_b2 = calculate_secret(h_eb, y2);
     println!(
-        "Bob recoit h_ea = {} calcule sa clé k_B avec h_EA = {}",
+        "Bob recoit h_ea = {} calcule sa clé k_B = {}",
         h_ea, k_b2
     );
 
@@ -95,8 +108,8 @@ fn exercice1() {
 
     // Clés différentes, puisque Eve intercepte et remplace les valeurs
     println!(
-        "Clés échangées : Alice calcul le secret = : {}, Bob calcul le secret = {}, Eve-Alice: {}
-    , Eve-Bob: {}",
+        "Clés échangées : Alice calcul le secret = : {}, Bob calcul le secret = {}, Eve calcul le secret avec Alice: {}
+    , Eve calcul le secret avec Bob: {}",
         k_a2, k_b2, k_e_alice, k_e_bob
     );
 
@@ -129,7 +142,7 @@ fn exercice1() {
 }
 
 // Fonction pour l'exponentiation modulaire efficace
-fn mod_exp(base: usize, exp: usize, modulo: usize) -> usize {
+fn mod_exp(base: u64, exp: u64, modulo: u64) -> u64 {
     let mut result = 1;
     let mut base = base % modulo;
     let mut exp = exp;
@@ -145,7 +158,7 @@ fn mod_exp(base: usize, exp: usize, modulo: usize) -> usize {
 }
 
 //Calcule le plus grand diviseur commun entre deux a et b
-fn pgcd(a: usize, b: usize) -> usize {
+fn pgcd(a: u64, b: u64) -> u64 {
     if b == 0 {
         a
     } else {
@@ -154,7 +167,7 @@ fn pgcd(a: usize, b: usize) -> usize {
 }
 
 //Calcule de la clé publique e
-fn calculate_e(phi: usize) -> usize {
+fn calculate_e(phi: u64) -> u64 {
     //Génère un nombre aléatoire < phi
     let mut e = rand::thread_rng().gen_range(1..phi);
     while pgcd(e, phi) != 1 {
@@ -164,7 +177,7 @@ fn calculate_e(phi: usize) -> usize {
 }
 
 //Calcule de la clé privé d
-fn calculate_d(e: usize, phi: usize) -> usize {
+fn calculate_d(e: u64, phi: u64) -> u64 {
     let mut d = 1;
     while (d * e) % phi != 1 {
         d += 1;
@@ -172,16 +185,16 @@ fn calculate_d(e: usize, phi: usize) -> usize {
     d
 }
 
-fn encrypt(message: usize, e: usize, n: usize) -> usize {
+fn encrypt(message: u64, e: u64, n: u64) -> u64 {
     mod_exp(message, e, n)
 }
 
-fn decrypt(ciphertext: usize, d: usize, n: usize) -> usize {
-    mod_exp(ciphertext as usize, d, n)
+fn decrypt(ciphertext: u64, d: u64, n: u64) -> u64 {
+    mod_exp(ciphertext as u64, d, n)
 }
 
 fn exercice2() {
-    print!("b\n");
+    print!("Exo 2\n");
     //Alice génère sa clé publique et privée
     let (n, p, q) = (143, 11, 13);
     let phi = (p - 1) * (q - 1);
@@ -227,6 +240,6 @@ fn exercice2() {
     }
      
      fn main() {
-    //exercice1();
+    exercice1();
     exercice2();
 }
