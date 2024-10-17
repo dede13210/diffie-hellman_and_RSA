@@ -1,49 +1,31 @@
 use rand::Rng;
 
-// Fonction pour l'exponentiation modulaire efficace
-fn mod_exp(base: u64, exp: u64, modulo: u64) -> u64 {
-    let mut result = 1;
-    let mut base = base % modulo;
-    let mut exp = exp;
-    
-    while exp > 0 {
-        if exp % 2 == 1 {
-            result = (result * base) % modulo;
-        }
-        base = (base * base) % modulo;
-        exp /= 2;
-    }
-    result
-}
-
 // Alice génère x, calcule h_A = 3^x mod 2^63 et envoie h_A
-fn generate_public_key() -> (u64, u64) {
-    let x: u64 = rand::thread_rng().gen_range(1..=u32::MAX as u64); // x ∈ [1, 2^32]
-    let h = mod_exp(3, x, 2^63);
+fn generate_public_key() -> (usize, usize) {
+    let x: usize = rand::thread_rng().gen_range(1..=u32::MAX as usize); // x ∈ [1, 2^32]
+    let h = mod_exp(3, x, 2 ^ 63);
     (x, h) // Retourne x et h_A pour l'étape suivante
 }
 
-fn calculate_secret(h: u64, x: u64) -> u64 {
-    mod_exp(h, x, 2^63)
+fn calculate_secret(h: usize, x: usize) -> usize {
+    mod_exp(h, x, 2 ^ 63)
 }
 
-
-
 // Eve intercepte les messages et remplace h_A et h_B
-fn eve_intercept() -> (u64, u64, u64, u64) {
+fn eve_intercept() -> (usize, usize, usize, usize) {
     // Eve génère son propres secrets e_x
-    let e_x: u64 = rand::thread_rng().gen_range(1..=u32::MAX as u64);
-    let e_y: u64 = rand::thread_rng().gen_range(1..=u32::MAX as u64);
+    let e_x: usize = rand::thread_rng().gen_range(1..=u32::MAX as usize);
+    let e_y: usize = rand::thread_rng().gen_range(1..=u32::MAX as usize);
 
-    let h_ea = mod_exp(3, e_x, 2^63); 
-    let h_eb = mod_exp(3, e_y, 2^63); 
+    let h_ea = mod_exp(3, e_x, 2 ^ 63);
+    let h_eb = mod_exp(3, e_y, 2 ^ 63);
 
     println!("Eve envoie h_EA = {}, h_EB = {}", h_ea, h_eb);
 
     (h_ea, h_eb, e_x, e_y)
 }
 
-fn exercice1(){
+fn exercice1() {
     print!("a)\n");
 
     print!("Simulation de l'échange de clé entre Alice et Bob avec Eve en observatrice passive\n");
@@ -72,7 +54,10 @@ fn exercice1(){
     }
 
     // Simulation d'Eve passive
-    println!("Eve observe les messages : h_A = {}, h_B = {}\n\n", h_a1, h_b1);
+    println!(
+        "Eve observe les messages : h_A = {}, h_B = {}\n\n",
+        h_a1, h_b1
+    );
 
     print!("Simulation avec Eve agissant comme un homme-du-milieu\n");
 
@@ -89,19 +74,31 @@ fn exercice1(){
 
     // Alice reçoit h_EB, Bob reçoit h_EA
     let k_a2 = calculate_secret(h_eb, x2);
-    println!("Alice recoit h_eb = {} calcule sa clé k_A avec h_EB = {}", h_eb, k_a2);
+    println!(
+        "Alice recoit h_eb = {} calcule sa clé k_A avec h_EB = {}",
+        h_eb, k_a2
+    );
 
     let k_b2 = calculate_secret(h_ea, y2);
-    println!("Bob recoit h_ea = {} calcule sa clé k_B avec h_EA = {}",h_ea,  k_b2);
+    println!(
+        "Bob recoit h_ea = {} calcule sa clé k_B avec h_EA = {}",
+        h_ea, k_b2
+    );
 
     // Eve peut calculer les clés intermédiaires
-    let k_e_alice = calculate_secret(h_a2, e_x);  // Clé partagée avec Alice
-    let k_e_bob = calculate_secret(h_b2, e_y);    // Clé partagée avec Bob
-    println!("Eve calcule la clé avec Alice: {}, et avec Bob: {}", k_e_alice, k_e_bob);
+    let k_e_alice = calculate_secret(h_a2, e_x); // Clé partagée avec Alice
+    let k_e_bob = calculate_secret(h_b2, e_y); // Clé partagée avec Bob
+    println!(
+        "Eve calcule la clé avec Alice: {}, et avec Bob: {}",
+        k_e_alice, k_e_bob
+    );
 
     // Clés différentes, puisque Eve intercepte et remplace les valeurs
-    println!("Clés échangées : Alice calcul le secret = : {}, Bob calcul le secret = {}, Eve-Alice: {}
-    , Eve-Bob: {}", k_a2, k_b2, k_e_alice, k_e_bob);
+    println!(
+        "Clés échangées : Alice calcul le secret = : {}, Bob calcul le secret = {}, Eve-Alice: {}
+    , Eve-Bob: {}",
+        k_a2, k_b2, k_e_alice, k_e_bob
+    );
 
     print!("b)\n");
     print!("Selon alice et bob, si il ne peuvent pas communiqué entre eux, il n'y a pas de différence entre les deux scénarios. \n\n");
@@ -112,16 +109,124 @@ fn exercice1(){
     print!("d)\n");
     //(d) Dans la notation des notes de cours (voir révision IKE), quelles sont les Π𝐴𝑖 , Π𝐵𝑖 ?
     print!("Lors du premier scénario :\n");
-    print!("Π𝐴𝑖 = (x = {}, h_a = {}, h_b = {}, k = {}) \n", x1, h_a1, h_b1, k_a1);
-    print!("Π𝐵𝑖 = (y = {}, h_b = {}, h_a = {}, k = {}) \n", y1, h_b1, h_a1, k_b1);
+    print!(
+        "Π𝐴𝑖 = (x = {}, h_a = {}, h_b = {}, k = {}) \n",
+        x1, h_a1, h_b1, k_a1
+    );
+    print!(
+        "Π𝐵𝑖 = (y = {}, h_b = {}, h_a = {}, k = {}) \n",
+        y1, h_b1, h_a1, k_b1
+    );
     print!("Lors du deuxième scénario :\n");
-    print!("Π𝐴𝑖 = (x = {}, h_a = {}, h_b = {}, k = {}) \n", x2, h_a2, h_ea, k_a2);
-    print!("Π𝐵𝑖 = (y = {}, h_b = {}, h_a = {}, k = {}) \n", y2, h_b2, h_eb, k_b2);
-    
+    print!(
+        "Π𝐴𝑖 = (x = {}, h_a = {}, h_b = {}, k = {}) \n",
+        x2, h_a2, h_ea, k_a2
+    );
+    print!(
+        "Π𝐵𝑖 = (y = {}, h_b = {}, h_a = {}, k = {}) \n",
+        y2, h_b2, h_eb, k_b2
+    );
 }
 
-fn main() {
-    exercice1();
-    
-    
+// Fonction pour l'exponentiation modulaire efficace
+fn mod_exp(base: usize, exp: usize, modulo: usize) -> usize {
+    let mut result = 1;
+    let mut base = base % modulo;
+    let mut exp = exp;
+
+    while exp > 0 {
+        if exp % 2 == 1 {
+            result = (result * base) % modulo;
+        }
+        base = (base * base) % modulo;
+        exp /= 2;
+    }
+    result
+}
+
+//Calcule le plus grand diviseur commun entre deux a et b
+fn pgcd(a: usize, b: usize) -> usize {
+    if b == 0 {
+        a
+    } else {
+        pgcd(b, a % b)
+    }
+}
+
+//Calcule de la clé publique e
+fn calculate_e(phi: usize) -> usize {
+    //Génère un nombre aléatoire < phi
+    let mut e = rand::thread_rng().gen_range(1..phi);
+    while pgcd(e, phi) != 1 {
+        e = rand::thread_rng().gen_range(1..phi);
+    }
+    e
+}
+
+//Calcule de la clé privé d
+fn calculate_d(e: usize, phi: usize) -> usize {
+    let mut d = 1;
+    while (d * e) % phi != 1 {
+        d += 1;
+    }
+    d
+}
+
+fn encrypt(message: usize, e: usize, n: usize) -> usize {
+    mod_exp(message, e, n)
+}
+
+fn decrypt(ciphertext: usize, d: usize, n: usize) -> usize {
+    mod_exp(ciphertext as usize, d, n)
+}
+
+fn exercice2() {
+    print!("b\n");
+    //Alice génère sa clé publique et privée
+    let (n, p, q) = (143, 11, 13);
+    let phi = (p - 1) * (q - 1);
+    let e = calculate_e(phi);
+    let d = calculate_d(e, phi);
+
+    //Bob envoie un message chiffré
+    let message1 = 3;
+    let message2 = 5;
+    let message3 = 7;
+    let encrypted_message1 = encrypt(message1, e, n);
+    let encrypted_message2 = encrypt(message2, e, n);
+    let encrypted_message3 = encrypt(message3, e, n);
+
+    //Alice déchiffre le message
+    let decrypted_message1 = decrypt(encrypted_message1, d, n);
+    let decrypted_message2 = decrypt(encrypted_message2, d, n);
+    let decrypted_message3 = decrypt(encrypted_message3, d, n);
+
+    print!("Alice envoie sa clé publique (n = {}, e = {}), elle recoit les messages chiffrées (m1 = {}, m2 = {}, m3 = {}), 
+    Alice déchiffre le message (m1 = {}, m2 = {}, m3 = {})\n", n, e, encrypted_message1, encrypted_message2, encrypted_message3,
+     decrypted_message1, decrypted_message2, decrypted_message3);
+    print!("bob recoit la clé publique (n = {}, e = {}), il chiffre les messages (m1 = {}, m2 = {}, m3 = {}) et envoie à alice les
+    messages chiffres (m1 = {}, m2 = {}, m3 = {})\n", n, e, message1, message2, message3, encrypted_message1, encrypted_message2,
+    encrypted_message3);
+    print!("eve intercepte la cle publique (n = {}, e = {}), elle intercepte les messages chiffrés (m1 = {}, m2 = {}, m3 = {})\n", n, e, encrypted_message1, encrypted_message2, encrypted_message3);
+
+
+    print!("\n\nd)\n");
+     //Répéter le scénario avec m = 0 et m = 1
+    let message4 = 0;
+    let message5 = 1;
+    let encrypted_message4 = encrypt(message4, e, n);
+    let encrypted_message5 = encrypt(message5, e, n);
+    let decrypted_message4 = decrypt(encrypted_message4, d, n);
+    let decrypted_message5 = decrypt(encrypted_message5, d, n);
+    print!("Alice envoie sa clé publique (n = {}, e = {}), elle recoit les messages chiffrées (m4 = {}, m5 = {}),
+    Alice déchiffre le message (m4 = {}, m5 = {})\n", n, e, encrypted_message4, encrypted_message5, decrypted_message4, decrypted_message5);
+    print!("bob recoit la clé publique (n = {}, e = {}), il chiffre les messages (m4 = {}, m5 = {}) et envoie à alice les
+    messages chiffres (m4 = {}, m5 = {})\n", n, e, message4, message5, encrypted_message4, encrypted_message5);
+    print!("eve intercepte la cle publique (n = {}, e = {}), elle intercepte les messages chiffrés (m4 = {}, m5 = {})\n", n, e, encrypted_message4, encrypted_message5);
+
+    }
+     
+     fn main() {
+    //exercice1();
+    exercice2();
 }
