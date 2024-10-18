@@ -214,8 +214,8 @@ fn exercice2() {
     let decrypted_message2 = decrypt(encrypted_message2, d, n);
     let decrypted_message3 = decrypt(encrypted_message3, d, n);
 
-    print!("Alice envoie sa clé publique (n = {}, e = {}), elle recoit les messages chiffrées (m1 = {}, m2 = {}, m3 = {}), 
-    Alice déchiffre le message (m1 = {}, m2 = {}, m3 = {})\n", n, e, encrypted_message1, encrypted_message2, encrypted_message3,
+    print!("Alice genère sa clé privé sk = (n = {},d ={} ) envoie sa clé publique pk = ( e = {},n = {}), elle recoit les messages chiffrées (m1 = {}, m2 = {}, m3 = {}), 
+    Alice déchiffre le message (m1 = {}, m2 = {}, m3 = {})\n", d, n, e,  n, encrypted_message1, encrypted_message2, encrypted_message3,
      decrypted_message1, decrypted_message2, decrypted_message3);
     print!("bob recoit la clé publique (n = {}, e = {}), il chiffre les messages (m1 = {}, m2 = {}, m3 = {}) et envoie à alice les
     messages chiffres (m1 = {}, m2 = {}, m3 = {})\n", n, e, message1, message2, message3, encrypted_message1, encrypted_message2,
@@ -231,15 +231,66 @@ fn exercice2() {
     let encrypted_message5 = encrypt(message5, e, n);
     let decrypted_message4 = decrypt(encrypted_message4, d, n);
     let decrypted_message5 = decrypt(encrypted_message5, d, n);
-    print!("Alice envoie sa clé publique (n = {}, e = {}), elle recoit les messages chiffrées (m4 = {}, m5 = {}),
-    Alice déchiffre le message (m4 = {}, m5 = {})\n", n, e, encrypted_message4, encrypted_message5, decrypted_message4, decrypted_message5);
+    print!("Alice genère sa clé privé sk = (n = {},d ={} ) envoie sa clé publique (e = {}, n = {}), elle recoit les messages chiffrées (m4 = {}, m5 = {}),
+    Alice déchiffre le message (m4 = {}, m5 = {})\n", n, d, e, n, encrypted_message4, encrypted_message5, decrypted_message4, decrypted_message5);
     print!("bob recoit la clé publique (n = {}, e = {}), il chiffre les messages (m4 = {}, m5 = {}) et envoie à alice les
     messages chiffres (m4 = {}, m5 = {})\n", n, e, message4, message5, encrypted_message4, encrypted_message5);
     print!("eve intercepte la cle publique (n = {}, e = {}), elle intercepte les messages chiffrés (m4 = {}, m5 = {})\n", n, e, encrypted_message4, encrypted_message5);
 
-    }
+}
+
+// Algorithme de signature RSA (Sign2)
+fn sign2(sk: (u64, u64), m: u64) -> u64 {
+    let (n, d) = sk;
+    mod_exp(m, d, n) // Calcul de la signature: m^d mod n
+}
+
+// Algorithme de vérification RSA (Verif2)
+fn verif2(pk: (u64, u64), m: u64, sigma: u64) -> bool {
+    let (n, e) = pk;
+    let m_prime = mod_exp(sigma, e, n); // Calcul de la vérification: σ^e mod n
+    m_prime == m
+}
+
+
+fn exercice3(){
+    //la clé publique de Alice tel que l'exo 2
+    let (n, p, q) = (143, 11, 13);
+    let phi = (p - 1) * (q - 1);
+    let e = calculate_e(phi);
+    let d = calculate_d(e, phi);
+    let pk = (n, e);
+    let sk = (n, d);
+
+    //Alice signe les messages
+    let message1 = 3;
+    let message2 = 5;
+    let message3 = 7;
+    let sigma1 = sign2(sk, message1);
+    let sigma2 = sign2(sk, message2);
+    let sigma3 = sign2(sk, message3);
+
+    //Eve modifie le message3
+    let fake_message3 = 8;
+
+    //Bob vérifie les signatures
+    let is_valid1 = verif2(pk, message1, sigma1);
+    let is_valid2 = verif2(pk, message2, sigma2);
+    let is_valid3 = verif2(pk, fake_message3, sigma3);
+
+    print!("Alice génère clé publique et privées Alice d = {} et envoit sa clés publique (n = {}, e ={}), elle signe les messages (m1 = {}, m2 = {}, m3 = {}), Alice envoie les signatures (s1 = {}, s2 = {}, s3 = {})\n",d, n, e , message1, message2, message3, sigma1, sigma2, sigma3);
+    print!("Eve intercepte la clé publique (n = {}, e ={}) et les signatures (s1 = {}, s2 = {}, s3 = {}), elle modifie le message 3 (m3 = {})\n", n, e, sigma1, sigma2, sigma3, fake_message3);
+    print!("Bob reçoit la clé publique (n = {}, e ={}), et il reçoit et vérifie les signatures (s1 = {}, s2 = {}, s3 = {}), les signatures sont valides pour (s1 = {}, s2 = {}, s3 = {})\n", n, e , sigma1, sigma2, sigma3, is_valid1, is_valid2, is_valid3);
+
+
+
+
+}
      
-     fn main() {
-    exercice1();
+fn main() {
+    // exercice1();
     exercice2();
+    // exercice3();
+
+
 }
